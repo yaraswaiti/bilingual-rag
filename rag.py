@@ -4,16 +4,17 @@ import time
 import numpy as np
 from google import genai
 from google.genai import errors
-from sentence_transformers import SentenceTransformer
+from sentence_transformers import CrossEncoder, SentenceTransformer
 
-from chunking import build_chunks
+from chunking import build_chunks_by_article
 
 LLM_MODEL = "gemini-3.8-flash"
 
 embedder = SentenceTransformer("intfloat/multilingual-e5-small")
+reranker = CrossEncoder("BAAI/bge-reranker-v2-m3")
 client = genai.Client(api_key=os.environ["GEMINI_API_KEY"])
 
-chunks = build_chunks()
+chunks = build_chunks_by_article()
 emb = embedder.encode(
     ["passage: " + c["text"] for c in chunks],
     normalize_embeddings=True,
@@ -21,16 +22,20 @@ emb = embedder.encode(
 )
 
 
-def search(query, k=4):
+def search(query, k=3, candidates=15):
     q = embedder.encode("query: " + query, normalize_embeddings=True)
-    top = np.argsort(-(emb @ q))[:k]
-    return [chunks[i] for i in top]
+    top = np.argsort(-(emb @ q))[:candidates]
+    pairs = [(query, chunks[i]["text"]) for i in top]
+    scores = np.asarray(reranker.predict(pairs))
+    reranked = top[np.argsort(-scores)][:k]
+    return [chunks[i] for i in reranked]
 
 
-def answer(question, k=4):
+def answer(question, k=3):
     results = search(question, k)
     context = "\n\n".join(
-        f"[{i + 1}] ({c['source']}) {c['text']}" for i, c in enumerate(results)
+        f"[{i + 1}] ({c['source']}, {c['page']}) {c['text']}"
+        for i, c in enumerate(results)
     )
     prompt = f"""You are an assistant that answers questions about the Jordanian Labor Law.
 Answer ONLY using the context below. If the answer is not in the context,
@@ -61,4 +66,4 @@ if __name__ == "__main__":
         print("\n" + text)
         print("\nSources:")
         for i, c in enumerate(results, 1):
-            print(f"  [{i}] {c['source']} | page {c['page']}")
+            print(f"  [{i}] {c['source']} | {c['page']}")

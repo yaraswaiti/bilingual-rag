@@ -16,7 +16,8 @@ Jordanian Labor Law in Arabic and English, with source citations.
 
 ## Evaluation
     python eval.py
-Hit rate @3:  6/7 = 86%
+Evaluated on 30 bilingual questions (hit@3): 87% at 400 chars, 90% at 800, 93% at 1200.
+Run the API: uvicorn api:app --reload, then POST /ask with {"question": "..."}
 ## Problem I solved
 The Arabic PDF extracted with corrupted characters (the letters "لا" became "ال"),
 so I converted the source text to clean UTF-8 and kept the PDF reader for English.

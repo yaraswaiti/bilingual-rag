@@ -62,9 +62,8 @@ def run(chunk_size, overlap):
     return hits, valid, len(chunks)
 
 
-print(f"{'chunk':>6} {'overlap':>8} {'chunks':>7} {'hit@3':>12}")
-for size, overlap in [(400, 80), (800, 150), (1200, 200)]:
-    hits, valid, n = run(size, overlap)
-    print(f"{size:>6} {overlap:>8} {n:>7} {hits}/{valid} = {hits / valid:.0%}")
-
-
+if __name__ == "__main__":
+    print(f"{'chunk':>6} {'overlap':>8} {'chunks':>7} {'hit@3':>12}")
+    for size, overlap in [(400, 80), (800, 150), (1200, 200)]:
+        hits, valid, n = run(size, overlap)
+        print(f"{size:>6} {overlap:>8} {n:>7} {hits}/{valid} = {hits / valid:.0%}")
