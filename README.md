@@ -21,3 +21,13 @@ Run the API: uvicorn api:app --reload, then POST /ask with {"question": "..."}
 ## Problem I solved
 The Arabic PDF extracted with corrupted characters (the letters "لا" became "ال"),
 so I converted the source text to clean UTF-8 and kept the PDF reader for English.
+## Retrieval on PostgreSQL + pgvector
+Chunks are split by article and stored in a `vector(384)` column. Search uses
+cosine distance (`<=>`) in SQL. Hit@3 on the 30-question set: 29/30 = 97%.
+
+## APIs
+- FastAPI: `uvicorn api:app --reload`, then `POST /ask`
+- Django REST Framework: `python rag_site/manage.py runserver --noreload`, then `POST /ask/`
+
+Set `GEMINI_API_KEY` and `DATABASE_URL` as environment variables first.
+Never commit them.
